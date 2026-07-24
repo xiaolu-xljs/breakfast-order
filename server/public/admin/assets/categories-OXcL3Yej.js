@@ -1,0 +1,1 @@
+import{a as t}from"./index-aW5OK2Q9.js";const r={list:e=>t.get("/categories",{params:e}),detail:e=>t.get(`/categories/${e}`),create:e=>t.post("/categories",e),update:(e,a)=>t.put(`/categories/${e}`,a),remove:e=>t.delete(`/categories/${e}`)};export{r as c};

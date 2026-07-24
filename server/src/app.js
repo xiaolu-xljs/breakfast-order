@@ -24,27 +24,24 @@ app.use(
 // 访问日志
 app.use(morgan('dev'));
 
-// 静态资源：商品图片（仅本地开发有效，Vercel 没有持久磁盘）
+// 静态资源
 app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
-
-// 静态资源：餐桌二维码（同上）
 app.use('/qrcodes', express.static(path.join(__dirname, '../public/qrcodes')));
 
-// 注：顾客端预览（/preview/index.html）由 Vercel 的 public 目录自动服务
+const publicDir = path.join(__dirname, '../public');
 
-// 根路径说明
+// 商家后台 SPA（Vue 3，客户端路由 history 模式）
+app.use('/admin/assets', express.static(path.join(publicDir, 'admin/assets')));
+app.use('/admin', (req, res) => {
+  res.sendFile(path.join(publicDir, 'admin/index.html'));
+});
+
+// 顾客点餐页
+app.use('/preview', express.static(path.join(publicDir, 'preview')));
+
+// 根路径：点餐页（方便用户直接打开）
 app.get('/', (req, res) => {
-  res.json({
-    name: '早餐店点餐 API',
-    version: '0.1.0',
-    endpoints: {
-      api: '/api',
-      health: '/health',
-      uploads: '/uploads',
-      customerPreview: '/preview',
-      merchantAdmin: '见 admin-web 项目（npm run dev → http://localhost:5173）',
-    },
-  });
+  res.sendFile(path.join(publicDir, 'preview/index.html'));
 });
 
 // 健康检查
