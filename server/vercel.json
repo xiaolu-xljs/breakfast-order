@@ -3,7 +3,7 @@
   "buildCommand": "prisma generate && prisma db push --skip-generate --accept-data-loss && node prisma/seed.js",
   "rewrites": [
     {
-      "source": "/api/:path*",
+      "source": "/(.*)",
       "destination": "/api"
     }
   ]
