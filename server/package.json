@@ -9,6 +9,8 @@
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
     "prisma:generate": "prisma generate",
+    "prisma:generate:dev": "prisma generate --schema=prisma/schema.dev.prisma",
+    "db:setup": "prisma generate --schema=prisma/schema.dev.prisma && prisma db push --schema=prisma/schema.dev.prisma && node prisma/seed.js",
     "prisma:migrate": "prisma migrate dev --name init",
     "prisma:deploy": "prisma migrate deploy",
     "prisma:reset": "prisma migrate reset --force",
