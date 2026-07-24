@@ -11,15 +11,17 @@ const DEFAULT_ADMIN = {
 };
 
 async function main() {
-  console.log('🌱 开始填充种子数据...\n');
+  console.log('🌱 检查是否需要填充种子数据...\n');
 
-  // 清空（仅在开发期）
-  await prisma.orderItem.deleteMany();
-  await prisma.order.deleteMany();
-  await prisma.product.deleteMany();
-  await prisma.category.deleteMany();
-  await prisma.table.deleteMany();
-  await prisma.admin.deleteMany();
+  // 已存在数据则跳过（生产环境幂等保护）
+  const existing = await prisma.category.count();
+  if (existing > 0) {
+    console.log(`✅ 已有 ${existing} 个分类，跳过种子填充`);
+    console.log('   （如需重置，登录后台手动操作或删除所有数据后重跑）\n');
+    return;
+  }
+
+  console.log('🌱 数据库为空，开始填充种子数据...\n');
 
   // 分类
   const categories = await Promise.all([

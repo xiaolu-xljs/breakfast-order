@@ -25,12 +25,12 @@
     "jsonwebtoken": "^9.0.3",
     "morgan": "^1.10.0",
     "multer": "^2.2.0",
+    "prisma": "^5.22.0",
     "qrcode": "^1.5.4",
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "nodemon": "^3.1.7",
-    "prisma": "^5.22.0"
+    "nodemon": "^3.1.7"
   },
   "engines": {
     "node": ">=18.0.0"
