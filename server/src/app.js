@@ -24,17 +24,13 @@ app.use(
 // 访问日志
 app.use(morgan('dev'));
 
-// 静态资源：商品图片
+// 静态资源：商品图片（仅本地开发有效，Vercel 没有持久磁盘）
 app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
 
-// 静态资源：餐桌二维码
+// 静态资源：餐桌二维码（同上）
 app.use('/qrcodes', express.static(path.join(__dirname, '../public/qrcodes')));
 
-// 静态资源：顾客端浏览器预览（无需装微信开发者工具即可体验）
-app.use('/preview', express.static(path.join(__dirname, '../../miniprogram-preview')));
-app.get('/preview', (req, res) =>
-  res.redirect('/preview/index.html')
-);
+// 注：顾客端预览（/preview/index.html）由 Vercel 的 public 目录自动服务
 
 // 根路径说明
 app.get('/', (req, res) => {

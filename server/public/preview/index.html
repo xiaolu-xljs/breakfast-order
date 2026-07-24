@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>顾客端预览 · 早餐店点餐</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+}
+.toolbar {
+  background: #fff;
+  border-radius: 12px;
+  padding: 12px 20px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+.toolbar label {
+  font-size: 14px;
+  color: #606266;
+}
+.toolbar select, .toolbar button {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid #dcdfe6;
+  font-size: 13px;
+}
+.toolbar button {
+  background: #ff6b35;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+}
+.toolbar button:hover { background: #ff9558; }
+
+.phone {
+  width: 375px;
+  height: 720px;
+  background: #fff;
+  border-radius: 32px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+.statusbar {
+  height: 24px;
+  background: #ff6b35;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  font-size: 11px;
+  color: #fff;
+}
+.screen {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* 菜单页 */
+.menu-topbar {
+  background: #ff6b35;
+  color: #fff;
+  padding: 14px 16px;
+  font-size: 15px;
+  font-weight: 600;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.menu-topbar .badge {
+  background: rgba(255,255,255,0.25);
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+}
+.menu-body {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+.categories {
+  width: 92px;
+  background: #f5f6f8;
+  overflow-y: auto;
+}
+.category {
+  padding: 16px 12px;
+  font-size: 13px;
+  border-left: 3px solid transparent;
+  cursor: pointer;
+}
+.category.active {
+  background: #fff;
+  color: #ff6b35;
+  border-left-color: #ff6b35;
+  font-weight: 600;
+}
+.products {
+  flex: 1;
+  background: #fff;
+  padding: 10px;
+  overflow-y: auto;
+}
+.product {
+  display: flex;
+  padding: 10px 0;
+  border-bottom: 1px solid #f0f0f0;
+  align-items: center;
+}
+.product-image {
+  width: 56px;
+  height: 56px;
+  border-radius: 8px;
+  background: #f5f5f5;
+  margin-right: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+.product-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.product-info { flex: 1; min-width: 0; }
+.product-name {
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.product-desc {
+  color: #909399;
+  font-size: 11px;
+  margin-top: 2px;
+}
+.product-money {
+  color: #ff6b35;
+  font-weight: 600;
+  margin-top: 4px;
+  font-size: 14px;
+}
+.product-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 8px;
+}
+.btn-minus, .btn-plus {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #ff6b35;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  cursor: pointer;
+  user-select: none;
+}
+.btn-minus.disabled, .btn-plus.disabled {
+  background: #f0f0f0;
+  color: #c0c4cc;
+  cursor: not-allowed;
+}
+.qty {
+  min-width: 18px;
+  text-align: center;
+  font-size: 13px;
+}
+.empty {
+  text-align: center;
+  color: #909399;
+  padding: 50px 0;
+  font-size: 13px;
+}
+
+/* 购物车栏 */
+.cart-bar {
+  height: 52px;
+  background: #2c2c2c;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  position: relative;
+  cursor: pointer;
+}
+.cart-icon {
+  font-size: 22px;
+}
+.cart-count {
+  background: #ff3b30;
+  color: #fff;
+  border-radius: 10px;
+  padding: 0 6px;
+  font-size: 10px;
+  margin-left: -6px;
+  margin-top: -12px;
+  font-weight: 600;
+}
+.cart-total {
+  flex: 1;
+  margin-left: 14px;
+  font-size: 15px;
+  font-weight: 600;
+}
+.go-confirm {
+  background: #ff6b35;
+  padding: 7px 16px;
+  border-radius: 18px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+/* 购物车弹层 */
+.cart-mask {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: none;
+  align-items: flex-end;
+  z-index: 99;
+}
+.cart-mask.open { display: flex; }
+.cart-panel {
+  background: #fff;
+  width: 100%;
+  height: 55%;
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
+  display: flex;
+  flex-direction: column;
+}
+.cart-header {
+  padding: 14px;
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px solid #f0f0f0;
+  font-weight: 600;
+}
+.cart-header .close { color: #909399; cursor: pointer; }
+.cart-list {
+  flex: 1;
+  padding: 6px 14px;
+  overflow-y: auto;
+}
+.cart-item {
+  display: flex;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid #f5f5f5;
+}
+.cart-name { flex: 1; font-size: 14px; }
+.cart-money {
+  color: #ff6b35;
+  font-weight: 600;
+  margin: 0 12px;
+}
+.cart-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.cart-footer {
+  padding: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid #f0f0f0;
+  font-weight: 600;
+}
+
+/* 订单确认页 */
+.section {
+  background: #fff;
+  border-radius: 12px;
+  padding: 14px;
+  margin: 0 12px 10px;
+}
+.section-title {
+  color: #909399;
+  font-size: 12px;
+  margin-bottom: 10px;
+}
+.table-no {
+  font-size: 20px;
+  font-weight: 600;
+  color: #ff6b35;
+}
+.row-item {
+  display: flex;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px dashed #f0f0f0;
+}
+.row-item:last-child { border-bottom: none; }
+.row-item .name { flex: 1; font-size: 14px; }
+.row-item .qty { color: #909399; margin: 0 10px; font-size: 13px; }
+.row-item .money { color: #ff6b35; font-weight: 600; font-size: 14px; }
+.total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 10px;
+  margin-top: 10px;
+  border-top: 1px dashed #f0f0f0;
+  font-weight: 600;
+}
+.total-row .money { font-size: 20px; color: #ff6b35; }
+.footer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 12px;
+  background: #fff;
+  box-shadow: 0 -2px 8px rgba(0,0,0,0.05);
+}
+.btn-submit {
+  width: 100%;
+  background: #ff6b35;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  border-radius: 22px;
+  padding: 12px;
+  border: none;
+  cursor: pointer;
+}
+.btn-submit:disabled { background: #c0c4cc; }
+
+/* 订单状态页 */
+.hero {
+  background: linear-gradient(135deg, #ff6b35, #ff9558);
+  color: #fff;
+  padding: 20px;
+  text-align: center;
+  margin: 0 12px 12px;
+  border-radius: 12px;
+}
+.hero-icon { font-size: 40px; }
+.hero-title { font-size: 20px; font-weight: 600; margin-top: 6px; }
+.hero-sub { font-size: 12px; opacity: 0.85; margin-top: 4px; }
+
+.timeline {
+  display: flex;
+  align-items: center;
+  background: #fff;
+  margin: 0 12px 12px;
+  padding: 16px;
+  border-radius: 12px;
+}
+.step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: #c0c4cc;
+  font-size: 11px;
+}
+.step.done { color: #ff6b35; }
+.dot {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.step.done .dot { background: #ff6b35; color: #fff; }
+.line {
+  flex: 1;
+  height: 2px;
+  background: #f0f0f0;
+  margin: 0 6px;
+  margin-bottom: 14px;
+}
+.line.done { background: #ff6b35; }
+.footer-buttons {
+  display: flex;
+  gap: 10px;
+  padding: 0 12px;
+  margin-top: 16px;
+}
+.btn-ghost, .btn-primary {
+  flex: 1;
+  border-radius: 22px;
+  font-size: 14px;
+  padding: 10px;
+  border: none;
+  cursor: pointer;
+}
+.btn-ghost { background: #f5f5f5; color: #333; }
+.btn-primary { background: #ff6b35; color: #fff; }
+
+.toast {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0,0,0,0.75);
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  z-index: 1000;
+  display: none;
+}
+.toast.show { display: block; }
+</style>
+</head>
+<body>
+  <div class="toolbar">
+    <label>桌号：</label>
+    <select id="tableSelect">
+      <option value="">加载中…</option>
+    </select>
+    <button onclick="resetFlow()">重置</button>
+    <span style="font-size: 12px; color: #909399">| 在浏览器里模拟小程序顾客端</span>
+  </div>
+
+  <div class="phone">
+    <div class="statusbar">
+      <span>9:41</span>
+      <span>●●●●● 5G</span>
+    </div>
+
+    <!-- 菜单页 -->
+    <div class="screen" id="screenMenu">
+      <div class="menu-topbar">
+        <span>🍜 早餐店</span>
+        <span class="badge" id="menuTableNo">--</span>
+      </div>
+      <div class="menu-body">
+        <div class="categories" id="categories"></div>
+        <div class="products" id="products"></div>
+      </div>
+      <div class="cart-bar" id="cartBar" style="display:none" onclick="openCart()">
+        <span class="cart-icon">🛒</span>
+        <span class="cart-count" id="cartCount">0</span>
+        <span class="cart-total" id="cartTotal">¥0</span>
+        <span class="go-confirm" onclick="event.stopPropagation();goConfirm()">去结算</span>
+      </div>
+      <div class="cart-mask" id="cartMask">
+        <div class="cart-panel" onclick="event.stopPropagation()">
+          <div class="cart-header">
+            <span id="cartPanelTitle">已选 0 件</span>
+            <span class="close" onclick="closeCart()">✕</span>
+          </div>
+          <div class="cart-list" id="cartList"></div>
+          <div class="cart-footer">
+            <span>合计 <span id="cartPanelTotal">¥0</span></span>
+            <span class="go-confirm" onclick="goConfirm()">去结算</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 订单确认页 -->
+    <div class="screen" id="screenConfirm" style="display:none">
+      <div style="padding: 14px 16px; background: #ff6b35; color: #fff; font-weight: 600">
+        ← 确认订单
+      </div>
+      <div style="flex:1; overflow-y:auto; padding-top: 14px; padding-bottom: 80px">
+        <div class="section">
+          <div class="section-title">桌号</div>
+          <div class="table-no" id="confirmTableNo">--</div>
+        </div>
+        <div class="section">
+          <div class="section-title">已点商品</div>
+          <div id="confirmItems"></div>
+          <div class="total-row">
+            <span>合计</span>
+            <span class="money" id="confirmTotal">¥0</span>
+          </div>
+        </div>
+        <div style="padding: 12px; font-size: 12px; color: #909399; text-align: center">
+          💡 当前为 mock 支付模式，上线后接入真实微信支付
+        </div>
+      </div>
+      <div class="footer">
+        <button class="btn-submit" id="submitBtn" onclick="submitOrder()">提交并支付</button>
+      </div>
+    </div>
+
+    <!-- 订单状态页 -->
+    <div class="screen" id="screenStatus" style="display:none">
+      <div style="padding: 14px 16px; background: #ff6b35; color: #fff; font-weight: 600">
+        订单状态
+      </div>
+      <div style="flex:1; overflow-y:auto; padding-top: 14px">
+        <div class="hero">
+          <div class="hero-icon" id="statusIcon">⏳</div>
+          <div class="hero-title" id="statusTitle">--</div>
+          <div class="hero-sub" id="statusSub">--</div>
+        </div>
+        <div class="timeline">
+          <div class="step" id="step1"><div class="dot">1</div><span>已下单</span></div>
+          <div class="line" id="line1"></div>
+          <div class="step" id="step2"><div class="dot">2</div><span>制作中</span></div>
+          <div class="line" id="line2"></div>
+          <div class="step" id="step3"><div class="dot">3</div><div>已出餐</div></div>
+        </div>
+        <div class="section">
+          <div class="section-title">商品明细</div>
+          <div id="statusItems"></div>
+          <div class="total-row">
+            <span>合计</span>
+            <span class="money" id="statusTotal">¥0</span>
+          </div>
+        </div>
+        <div class="footer-buttons">
+          <button class="btn-ghost" onclick="callWaiter()">呼叫服务员</button>
+          <button class="btn-primary" onclick="reorder()">再来一单</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+<script>
+// ====== 配置 ======
+// 同源请求：直接用 /api，自动跟随当前访问地址（http://localhost:3000）
+// 如果是别的机器访问本机预览，只要访问 http://<电脑IP>:3000/preview 即可
+const API_BASE = '/api';
+
+// ====== 全局状态 ======
+let state = {
+  tableNo: '',
+  tableId: null,
+  categories: [],
+  activeCategoryId: null,
+  products: [],
+  cart: [],
+  order: null,
+};
+
+// ====== 工具 ======
+function showToast(text) {
+  const el = document.getElementById('toast');
+  el.textContent = text;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 1800);
+}
+
+async function api(method, path, body) {
+  const res = await fetch(API_BASE + path, {
+    method,
+    headers: { 'Content-Type': 'application/json' },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  const data = await res.json();
+  if (!res.ok) throw data;
+  return data;
+}
+
+function money(n) { return Number(n || 0).toFixed(2); }
+function cartCount() { return state.cart.reduce((s, i) => s + i.quantity, 0); }
+function cartTotal() { return state.cart.reduce((s, i) => s + i.price * i.quantity, 0); }
+
+// ====== 初始化 ======
+async function init() {
+  await loadTables();
+  const sel = document.getElementById('tableSelect');
+  if (sel.value) switchTable(sel.value);
+}
+
+async function loadTables() {
+  const res = await api('GET', '/tables?onlyActive=true');
+  const sel = document.getElementById('tableSelect');
+  sel.innerHTML = res.data.map(t => `<option value="${t.tableNo}">${t.tableNo}</option>`).join('');
+}
+
+async function switchTable(tableNo) {
+  state.tableNo = tableNo;
+  document.getElementById('menuTableNo').textContent = tableNo;
+  // 解析桌号
+  const res = await api('GET', '/tables/by-no/' + encodeURIComponent(tableNo));
+  state.tableId = res.data.id;
+  // 加载菜单
+  const cats = await api('GET', '/categories?onlyActive=true');
+  state.categories = cats.data;
+  if (cats.data.length) {
+    state.activeCategoryId = cats.data[0].id;
+    await loadProducts(state.activeCategoryId);
+  }
+  renderCategories();
+  renderProducts();
+  state.cart = [];
+  refreshCartBar();
+  showScreen('menu');
+}
+
+async function loadProducts(categoryId) {
+  const res = await api('GET', '/products?onlyAvailable=true&categoryId=' + categoryId);
+  state.products = res.data;
+}
+
+// ====== 渲染 ======
+function renderCategories() {
+  document.getElementById('categories').innerHTML = state.categories.map(c => `
+    <div class="category ${c.id === state.activeCategoryId ? 'active' : ''}" onclick="selectCategory(${c.id})">
+      ${c.name}
+    </div>
+  `).join('');
+}
+
+function renderProducts() {
+  if (!state.products.length) {
+    document.getElementById('products').innerHTML = '<div class="empty">该分类暂无商品</div>';
+    return;
+  }
+  document.getElementById('products').innerHTML = state.products.map(p => {
+    const inCart = state.cart.find(i => i.productId === p.id);
+    const qty = inCart ? inCart.quantity : 0;
+    return `
+    <div class="product">
+      <div class="product-image">${p.imageUrl ? `<img src="${p.imageUrl.startsWith('http') ? p.imageUrl : p.imageUrl}" />` : '🍽'}</div>
+      <div class="product-info">
+        <div class="product-name">${p.name}</div>
+        <div class="product-money">¥${money(p.price)}</div>
+      </div>
+      <div class="product-actions">
+        <div class="btn-minus ${qty === 0 ? 'disabled' : ''}" onclick="changeQty(${p.id}, -1)">−</div>
+        <div class="qty">${qty}</div>
+        <div class="btn-plus" onclick="changeQty(${p.id}, 1)">+</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function selectCategory(id) {
+  state.activeCategoryId = id;
+  renderCategories();
+  await loadProducts(id);
+  renderProducts();
+}
+
+function changeQty(productId, delta) {
+  const product = state.products.find(p => p.id === productId);
+  if (!product) return;
+  let item = state.cart.find(i => i.productId === productId);
+  if (!item && delta > 0) {
+    item = {
+      productId: product.id,
+      name: product.name,
+      price: product.price,
+      imageUrl: product.imageUrl,
+      quantity: 0,
+    };
+    state.cart.push(item);
+  }
+  item.quantity += delta;
+  if (item.quantity <= 0) {
+    state.cart = state.cart.filter(i => i.productId !== productId);
+  }
+  renderProducts();
+  refreshCartBar();
+  // 同步购物车弹层
+  if (document.getElementById('cartMask').classList.contains('open')) renderCartPanel();
+}
+
+function refreshCartBar() {
+  const n = cartCount();
+  document.getElementById('cartBar').style.display = n > 0 ? 'flex' : 'none';
+  document.getElementById('cartCount').textContent = n;
+  document.getElementById('cartTotal').textContent = '¥' + money(cartTotal());
+}
+
+function openCart() {
+  renderCartPanel();
+  document.getElementById('cartMask').classList.add('open');
+}
+function closeCart() {
+  document.getElementById('cartMask').classList.remove('open');
+}
+function renderCartPanel() {
+  document.getElementById('cartPanelTitle').textContent = '已选 ' + cartCount() + ' 件';
+  document.getElementById('cartPanelTotal').textContent = '¥' + money(cartTotal());
+  document.getElementById('cartList').innerHTML = state.cart.map(i => `
+    <div class="cart-item">
+      <div class="cart-name">${i.name}</div>
+      <div class="cart-money">¥${money(i.price)}</div>
+      <div class="cart-actions">
+        <div class="btn-minus" onclick="changeQty(${i.productId}, -1)">−</div>
+        <div class="qty">${i.quantity}</div>
+        <div class="btn-plus" onclick="changeQty(${i.productId}, 1)">+</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ====== 屏幕切换 ======
+function showScreen(name) {
+  document.getElementById('screenMenu').style.display = name === 'menu' ? 'flex' : 'none';
+  document.getElementById('screenConfirm').style.display = name === 'confirm' ? 'flex' : 'none';
+  document.getElementById('screenStatus').style.display = name === 'status' ? 'flex' : 'none';
+}
+
+// ====== 流程 ======
+function goConfirm() {
+  if (cartCount() === 0) return;
+  closeCart();
+  document.getElementById('confirmTableNo').textContent = state.tableNo;
+  document.getElementById('confirmItems').innerHTML = state.cart.map(i => `
+    <div class="row-item">
+      <span class="name">${i.name}</span>
+      <span class="qty">× ${i.quantity}</span>
+      <span class="money">¥${money(i.price * i.quantity)}</span>
+    </div>
+  `).join('');
+  document.getElementById('confirmTotal').textContent = '¥' + money(cartTotal());
+  showScreen('confirm');
+}
+
+async function submitOrder() {
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.textContent = '提交中…';
+  try {
+    const res = await api('POST', '/orders', {
+      tableId: state.tableId,
+      items: state.cart.map(i => ({ productId: i.productId, quantity: i.quantity })),
+    });
+    state.cart = [];
+    refreshCartBar();
+    state.order = res.data;
+    // 调用支付（mock 模式直接标记已付；真支付模式会返回 wx.requestPayment 参数）
+    btn.textContent = '支付中…';
+    await api('POST', '/pay', { orderNo: res.data.orderNo });
+    enterStatusPage(res.data.orderNo);
+  } catch (err) {
+    showToast(err.message || '下单失败');
+    btn.disabled = false;
+    btn.textContent = '提交订单';
+  }
+}
+
+let statusTimer = null;
+async function enterStatusPage(orderNo) {
+  showScreen('status');
+  await pollStatus();
+  if (statusTimer) clearInterval(statusTimer);
+  statusTimer = setInterval(pollStatus, 3000);
+}
+
+async function pollStatus() {
+  if (!state.order) return;
+  try {
+    const res = await api('GET', '/orders/by-no/' + state.order.orderNo);
+    state.order = res.data;
+    renderStatus();
+  } catch (err) {}
+}
+
+const STATUS_TEXT = {
+  paid: '待商家处理',
+  preparing: '制作中',
+  served: '已出餐',
+  completed: '已完成',
+  cancelled: '已取消',
+};
+function renderStatus() {
+  const o = state.order;
+  document.getElementById('statusTitle').textContent = STATUS_TEXT[o.status] || o.status;
+  document.getElementById('statusSub').textContent = '订单号 ' + o.orderNo + ' · 桌号 ' + o.tableNo;
+  document.getElementById('statusIcon').textContent = o.status === 'served' || o.status === 'completed' ? '✅' : '⏳';
+  const stepIndex = ['paid', 'preparing', 'served', 'completed'].indexOf(o.status);
+  const idx = stepIndex < 0 ? 0 : stepIndex;
+  [['step1', 0], ['step2', 1], ['step3', 2]].forEach(([id, i]) => {
+    document.getElementById(id).classList.toggle('done', i <= idx);
+  });
+  document.getElementById('line1').classList.toggle('done', idx >= 1);
+  document.getElementById('line2').classList.toggle('done', idx >= 2);
+  document.getElementById('statusItems').innerHTML = o.items.map(i => `
+    <div class="row-item">
+      <span class="name">${i.productName}</span>
+      <span class="qty">× ${i.quantity}</span>
+      <span class="money">¥${money(i.subtotal)}</span>
+    </div>
+  `).join('');
+  document.getElementById('statusTotal').textContent = '¥' + money(o.totalAmount);
+  if (['completed', 'cancelled'].includes(o.status)) {
+    clearInterval(statusTimer);
+    statusTimer = null;
+  }
+}
+
+function callWaiter() { showToast('已通知服务员'); }
+function reorder() {
+  state.cart = [];
+  refreshCartBar();
+  switchTable(state.tableNo);
+}
+
+function resetFlow() {
+  if (statusTimer) clearInterval(statusTimer);
+  state.cart = [];
+  state.order = null;
+  switchTable(document.getElementById('tableSelect').value);
+}
+
+document.getElementById('tableSelect').addEventListener('change', (e) => {
+  switchTable(e.target.value);
+});
+
+init().catch(err => showToast(err.message || '初始化失败'));
+</script>
+</body>
+</html>
