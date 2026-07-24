@@ -11,11 +11,6 @@ const createSchema = z.object({
 
 const updateSchema = createSchema.partial();
 
-function toDecimal(value) {
-  // Prisma 返回 Decimal 对象，转成 number 方便前端使用
-  return value == null ? value : Number(value);
-}
-
 // 列表（支持 ?onlyActive=true 给顾客端用）
 async function list(req, res, next) {
   try {

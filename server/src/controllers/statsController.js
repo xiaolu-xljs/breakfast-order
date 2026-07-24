@@ -8,6 +8,23 @@ function startOfDay() {
   return d;
 }
 
+// 热销商品：补充商品名称
+// hotProducts 来自 prisma.orderItem.groupBy({ _sum: { quantity, subtotal? } })
+async function enrichHotProducts(hotProducts) {
+  const productIds = hotProducts.map((h) => h.productId);
+  const products = await prisma.product.findMany({
+    where: { id: { in: productIds } },
+    select: { id: true, name: true },
+  });
+  const productMap = new Map(products.map((p) => [p.id, p]));
+  return hotProducts.map((h) => ({
+    productId: h.productId,
+    name: productMap.get(h.productId)?.name || `商品#${h.productId}`,
+    quantity: h._sum.quantity,
+    ...(h._sum.subtotal != null ? { revenue: h._sum.subtotal } : {}),
+  }));
+}
+
 // 商家后台首页：今日概览
 async function overview(req, res, next) {
   try {
@@ -60,15 +77,7 @@ async function overview(req, res, next) {
       }),
     ]);
 
-    // 查商品名称
-    const productIds = hotProducts.map((h) => h.productId);
-    const products = await prisma.product.findMany({
-      where: { id: { in: productIds } },
-      select: { id: true, name: true },
-    });
-    const productMap = new Map(products.map((p) => [p.id, p]));
-
-    const todayRevenue = Number(todayPaidAgg._sum.totalAmount || 0);
+    const todayRevenue = todayPaidAgg._sum.totalAmount || 0;
     const avgOrder = todayOrderCount > 0 ? todayRevenue / todayOrderCount : 0;
 
     res.json({
@@ -82,16 +91,12 @@ async function overview(req, res, next) {
         preparingCount,
         productCount,
         tableCount,
-        hotProducts: hotProducts.map((h) => ({
-          productId: h.productId,
-          name: productMap.get(h.productId)?.name || `商品#${h.productId}`,
-          quantity: h._sum.quantity,
-        })),
+        hotProducts: await enrichHotProducts(hotProducts),
         pendingOrders: todayOrders.map((o) => ({
           id: o.id,
           orderNo: o.orderNo,
           tableNo: o.table.tableNo,
-          totalAmount: Number(o.totalAmount),
+          totalAmount: o.totalAmount,
           status: o.status,
           createdAt: o.createdAt,
           itemNames: o.items.map((it) => `${it.productName}×${it.quantity}`),
@@ -135,12 +140,12 @@ async function range(req, res, next) {
     }
 
     for (const o of orders) {
-      if (o.status === 'cancelled') continue; // 取消的不计入营收
+      if (o.status === 'cancelled') continue;
       const key = bucketKey(new Date(o.createdAt));
       if (!buckets.has(key)) buckets.set(key, { date: key, orderCount: 0, revenue: 0 });
       const b = buckets.get(key);
       b.orderCount += 1;
-      b.revenue += Number(o.totalAmount);
+      b.revenue += o.totalAmount;
     }
 
     // 补齐空白日期
@@ -153,7 +158,7 @@ async function range(req, res, next) {
       if (granularity === 'hour') cur.setHours(cur.getHours() + 1);
     }
 
-    // 商品销量 TOP
+    // 商品销量 TOP（复用 enrichHotProducts）
     const itemAgg = await prisma.orderItem.groupBy({
       by: ['productId'],
       _sum: { quantity: true, subtotal: true },
@@ -166,25 +171,13 @@ async function range(req, res, next) {
       orderBy: { _sum: { quantity: 'desc' } },
       take: 20,
     });
-    const productIds = itemAgg.map((i) => i.productId);
-    const products = await prisma.product.findMany({
-      where: { id: { in: productIds } },
-      select: { id: true, name: true },
-    });
-    const productMap = new Map(products.map((p) => [p.id, p]));
-    const hotProducts = itemAgg.map((i) => ({
-      productId: i.productId,
-      name: productMap.get(i.productId)?.name || `商品#${i.productId}`,
-      quantity: i._sum.quantity,
-      revenue: Number(i._sum.subtotal || 0),
-    }));
 
     res.json({
       data: {
         range: { start: startDay, end },
         granularity,
         series: result,
-        hotProducts,
+        hotProducts: await enrichHotProducts(itemAgg),
         totals: {
           orderCount: result.reduce((s, r) => s + r.orderCount, 0),
           revenue: result.reduce((s, r) => s + r.revenue, 0),

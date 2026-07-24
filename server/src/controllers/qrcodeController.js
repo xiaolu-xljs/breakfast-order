@@ -1,34 +1,24 @@
-// 二维码控制器
-const path = require('path');
-const fs = require('fs');
+// 二维码控制器（Vercel 兼容版）
+// 不在本地写文件（Vercel Serverless 无持久磁盘），直接返回 base64 数据
 const QRCode = require('qrcode');
 const prisma = require('../db');
-
-const QR_DIR = path.join(__dirname, '../../public/qrcodes');
-if (!fs.existsSync(QR_DIR)) fs.mkdirSync(QR_DIR, { recursive: true });
 
 /**
  * 构造二维码内容
  * - 优先用小程序 scheme（上线后用）
  * - 没有配置就用预览 URL（本地/测试）
- *
- * 配置项（在 .env）：
- *   MINI_PROGRAM_PATH = pages/menu/menu    小程序落地页路径
- *   MINI_PROGRAM_SCHEME = weixin://dl/business/?appid=xxx  完整 scheme（可选）
- *   PREVIEW_BASE_URL = http://localhost:3000/preview        预览地址（开发期）
  */
 function buildQrContent(tableNo) {
   if (process.env.MINI_PROGRAM_SCHEME) {
-    // 真小程序 scheme（需要先调用 wxacode.getUnlimited 拿到真实链接）
     return `${process.env.MINI_PROGRAM_SCHEME}&path=${encodeURIComponent(process.env.MINI_PROGRAM_PATH || 'pages/menu/menu')}?table=${encodeURIComponent(tableNo)}`;
   }
-  // 预览模式
-  const base = process.env.PREVIEW_BASE_URL || 'http://localhost:3000/preview';
-  return `${base}?table=${encodeURIComponent(tableNo)}`;
+  // 预览模式：以当前域名作为 base
+  const base = process.env.PREVIEW_BASE_URL || `${process.env.VERCEL_URL ? 'https://' + process.env.VERCEL_URL : 'http://localhost:3000'}`;
+  return `${base}/?table=${encodeURIComponent(tableNo)}`;
 }
 
 /**
- * 生成/获取某张桌的二维码（PNG 文件 + 返回 URL）
+ * 生成某张桌的二维码（直接返回 base64 PNG 数据，不写磁盘）
  * GET /api/admin/tables/:id/qrcode
  */
 async function generate(req, res, next) {
@@ -38,30 +28,22 @@ async function generate(req, res, next) {
     if (!table) return res.status(404).json({ code: 404, message: '餐桌不存在' });
 
     const content = buildQrContent(table.tableNo);
-    const filename = `table-${table.id}-${table.tableNo}.png`;
-    const filepath = path.join(QR_DIR, filename);
 
-    // 生成 PNG（300x300，白底）
-    await QRCode.toFile(filepath, content, {
-      type: 'png',
+    // 生成 base64 PNG（不写磁盘）
+    const dataUrl = await QRCode.toDataURL(content, {
+      type: 'image/png',
       width: 400,
       margin: 2,
       color: { dark: '#000', light: '#fff' },
     });
 
-    // 把二维码内容存到 table.qrContent（首次生成）
-    if (table.tableNo) {
-      await prisma.table.update({
-        where: { id: table.id },
-        data: {}, // 占位，后续可加 qrContent 字段
-      });
-    }
-
     res.json({
       data: {
         tableId: table.id,
         tableNo: table.tableNo,
-        url: `/qrcodes/${filename}`,
+        // 二维码图片直接以 base64 data URL 返回
+        qrcode: dataUrl,
+        // 二维码内容（贴桌用）
         content,
       },
     });
@@ -80,10 +62,8 @@ async function batchGenerate(req, res, next) {
     const results = await Promise.all(
       tables.map(async (table) => {
         const content = buildQrContent(table.tableNo);
-        const filename = `table-${table.id}-${table.tableNo}.png`;
-        const filepath = path.join(QR_DIR, filename);
-        await QRCode.toFile(filepath, content, {
-          type: 'png',
+        const dataUrl = await QRCode.toDataURL(content, {
+          type: 'image/png',
           width: 400,
           margin: 2,
           color: { dark: '#000', light: '#fff' },
@@ -91,7 +71,7 @@ async function batchGenerate(req, res, next) {
         return {
           tableId: table.id,
           tableNo: table.tableNo,
-          url: `/qrcodes/${filename}`,
+          qrcode: dataUrl,
           content,
         };
       })

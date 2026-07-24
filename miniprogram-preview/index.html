@@ -586,8 +586,16 @@ function cartTotal() { return state.cart.reduce((s, i) => s + i.price * i.quanti
 // ====== 初始化 ======
 async function init() {
   await loadTables();
+  // 优先从 URL 参数读取桌号（二维码扫码进入时）
+  const params = new URLSearchParams(window.location.search);
+  const tableFromUrl = params.get('table');
   const sel = document.getElementById('tableSelect');
-  if (sel.value) switchTable(sel.value);
+  if (tableFromUrl && [...sel.options].some(o => o.value === tableFromUrl)) {
+    sel.value = tableFromUrl;
+    switchTable(tableFromUrl);
+  } else if (sel.value) {
+    switchTable(sel.value);
+  }
 }
 
 async function loadTables() {

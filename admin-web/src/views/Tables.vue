@@ -57,7 +57,7 @@
     <el-dialog v-model="qrDialogVisible" title="餐桌二维码" width="360">
       <div class="qr-box">
         <div class="qr-title">桌号：{{ qrInfo?.tableNo }}</div>
-        <img v-if="qrInfo?.url" :src="fullUrl(qrInfo.url)" class="qr-img" />
+        <img v-if="qrInfo?.qrcode" :src="qrInfo.qrcode" class="qr-img" />
         <div class="qr-hint">
           扫码内容：<br />
           <code>{{ qrInfo?.content }}</code>
@@ -161,7 +161,7 @@ async function batchQrcode() {
   loading.value = true;
   try {
     const { data } = await tableApi.batchQrcode();
-    ElMessage.success(`已生成 ${data.length} 张二维码，存到 public/qrcodes/`);
+    ElMessage.success(`已生成 ${data.length} 张二维码`);
     if (data.length) {
       qrInfo.value = data[0];
       qrDialogVisible.value = true;
@@ -173,17 +173,10 @@ async function batchQrcode() {
   }
 }
 
-function fullUrl(url) {
-  if (url.startsWith('http')) return url;
-  // 商家后台在 5173，二维码图片在 3000，必须用后端完整地址
-  // 生产环境 vite build 后这里改成正式域名
-  return `http://localhost:3000${url}`;
-}
-
 function downloadQr() {
   if (!qrInfo.value) return;
   const a = document.createElement('a');
-  a.href = fullUrl(qrInfo.value.url);
+  a.href = qrInfo.value.qrcode;
   a.download = `桌号-${qrInfo.value.tableNo}.png`;
   a.click();
 }

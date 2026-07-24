@@ -7,6 +7,7 @@ const routes = require('./routes');
 const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
+const rootDir = path.join(__dirname, '..');
 
 // 中间件
 app.use(express.json({ limit: '2mb' }));
@@ -24,24 +25,22 @@ app.use(
 // 访问日志
 app.use(morgan('dev'));
 
-// 静态资源
-app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
-app.use('/qrcodes', express.static(path.join(__dirname, '../public/qrcodes')));
+// ====== Vercel CDN 直接分发的静态文件 ======
+// admin/ 、 preview/ 、 /uploads、/qrcodes 由 Vercel CDN 直接处理
+// 这些路径不会到达 Express，除非走 fallback（如 SPA 客户端路由）
+// 见 server/vercel.json 的 rewrites 配置
 
-const publicDir = path.join(__dirname, '../public');
-
-// 商家后台 SPA（Vue 3，客户端路由 history 模式）
-app.use('/admin/assets', express.static(path.join(publicDir, 'admin/assets')));
-app.use('/admin', (req, res) => {
-  res.sendFile(path.join(publicDir, 'admin/index.html'));
+// 商家后台 SPA 客户端路由 fallback
+// （真正的静态文件如 index.html、assets/* 已被 Vercel CDN 直接返回）
+app.use('/admin', (req, res, next) => {
+  // /admin/assets/* 已经被 Vercel CDN 拦截，不会到这里
+  // 只有 /admin/xxx（无对应文件）才会到此处
+  res.sendFile(path.join(rootDir, 'admin/index.html'));
 });
 
-// 顾客点餐页
-app.use('/preview', express.static(path.join(publicDir, 'preview')));
-
-// 根路径：点餐页（方便用户直接打开）
+// 根路径：顾客点餐页（直接返回）
 app.get('/', (req, res) => {
-  res.sendFile(path.join(publicDir, 'preview/index.html'));
+  res.sendFile(path.join(rootDir, 'preview/index.html'));
 });
 
 // 健康检查

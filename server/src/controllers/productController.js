@@ -29,12 +29,7 @@ async function list(req, res, next) {
         category: { select: { id: true, name: true } },
       },
     });
-    // 把 Decimal 转成 number
-    const data = products.map((p) => ({
-      ...p,
-      price: Number(p.price),
-    }));
-    res.json({ data });
+    res.json({ data: products });
   } catch (err) {
     next(err);
   }
@@ -51,9 +46,7 @@ async function detail(req, res, next) {
     if (!product) {
       return res.status(404).json({ code: 404, message: '商品不存在' });
     }
-    res.json({
-      data: { ...product, price: Number(product.price) },
-    });
+    res.json({ data: product });
   } catch (err) {
     next(err);
   }
@@ -71,7 +64,7 @@ async function create(req, res, next) {
     }
 
     const product = await prisma.product.create({ data: body });
-    res.status(201).json({ data: { ...product, price: Number(product.price) } });
+    res.status(201).json({ data: product });
   } catch (err) {
     next(err);
   }
@@ -91,7 +84,7 @@ async function update(req, res, next) {
     }
 
     const product = await prisma.product.update({ where: { id }, data: body });
-    res.json({ data: { ...product, price: Number(product.price) } });
+    res.json({ data: product });
   } catch (err) {
     next(err);
   }

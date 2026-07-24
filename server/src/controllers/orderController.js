@@ -18,6 +18,16 @@ function genOrderNo() {
   return `${ts}${rand}`;
 }
 
+// 订单项格式化（items 数组，每个控制器都用了同样的映射）
+function formatItem(it) {
+  return {
+    productName: it.productName,
+    price: it.price,
+    quantity: it.quantity,
+    subtotal: it.subtotal,
+  };
+}
+
 // 输入校验
 const createSchema = z.object({
   tableId: z.number().int().positive(),
@@ -57,13 +67,12 @@ async function create(req, res, next) {
     let total = 0;
     const itemsData = body.items.map((i) => {
       const p = productMap.get(i.productId);
-      const price = Number(p.price);
-      const subtotal = price * i.quantity;
+      const subtotal = p.price * i.quantity;
       total += subtotal;
       return {
         productId: p.id,
         productName: p.name,
-        price,
+        price: p.price,
         quantity: i.quantity,
         subtotal,
       };
@@ -88,16 +97,10 @@ async function create(req, res, next) {
       data: {
         id: order.id,
         orderNo: order.orderNo,
-        totalAmount: Number(order.totalAmount),
+        totalAmount: order.totalAmount,
         status: order.status,
         tableNo: order.table.tableNo,
-        items: order.items.map((it) => ({
-          productId: it.productId,
-          productName: it.productName,
-          price: Number(it.price),
-          quantity: it.quantity,
-          subtotal: Number(it.subtotal),
-        })),
+        items: order.items.map((it) => ({ productId: it.productId, ...formatItem(it) })),
       },
     });
   } catch (err) {
@@ -120,17 +123,12 @@ async function detailByOrderNo(req, res, next) {
       data: {
         id: order.id,
         orderNo: order.orderNo,
-        totalAmount: Number(order.totalAmount),
+        totalAmount: order.totalAmount,
         status: order.status,
         tableNo: order.table.tableNo,
         paidAt: order.paidAt,
         createdAt: order.createdAt,
-        items: order.items.map((it) => ({
-          productName: it.productName,
-          price: Number(it.price),
-          quantity: it.quantity,
-          subtotal: Number(it.subtotal),
-        })),
+        items: order.items.map(formatItem),
       },
     });
   } catch (err) {
@@ -166,16 +164,11 @@ async function adminList(req, res, next) {
         id: o.id,
         orderNo: o.orderNo,
         tableNo: o.table.tableNo,
-        totalAmount: Number(o.totalAmount),
+        totalAmount: o.totalAmount,
         status: o.status,
         createdAt: o.createdAt,
         paidAt: o.paidAt,
-        items: o.items.map((it) => ({
-          productName: it.productName,
-          price: Number(it.price),
-          quantity: it.quantity,
-          subtotal: Number(it.subtotal),
-        })),
+        items: o.items.map(formatItem),
       })),
     });
   } catch (err) {
@@ -197,12 +190,8 @@ async function adminDetail(req, res, next) {
     res.json({
       data: {
         ...order,
-        totalAmount: Number(order.totalAmount),
-        items: order.items.map((it) => ({
-          ...it,
-          price: Number(it.price),
-          subtotal: Number(it.subtotal),
-        })),
+        totalAmount: order.totalAmount,
+        // items 已在 include 中，Decimal 已由中间件自动转换
       },
     });
   } catch (err) {
