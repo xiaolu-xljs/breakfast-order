@@ -1,0 +1,34 @@
+/* 全局样式 */
+page {
+  background: #f5f6f8;
+  font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+  color: #333;
+}
+
+.container {
+  padding: 16px;
+}
+
+.text-muted {
+  color: #909399;
+  font-size: 13px;
+}
+
+.flex {
+  display: flex;
+}
+.flex-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.flex-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.money {
+  color: #ff6b35;
+  font-weight: 600;
+}

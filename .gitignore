@@ -1,0 +1,12 @@
+node_modules/
+.env
+dist/
+public/uploads/*
+public/qrcodes/*
+prisma/dev.db*
+*.log
+.DS_Store
+.cache/
+
+# 不要忽略 prisma/migrations（Render 需要它们）
+!prisma/migrations/

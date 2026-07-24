@@ -1,0 +1,93 @@
+<view class="page">
+  <view class="topbar">🍜 早餐店   ·   桌号 <text class="badge">{{tableNo}}</text></view>
+
+  <view class="body">
+    <!-- 左侧分类 -->
+    <scroll-view class="categories" scroll-y>
+      <view
+        wx:for="{{categories}}"
+        wx:key="id"
+        class="category {{item.id === activeCategoryId ? 'active' : ''}}"
+        data-id="{{item.id}}"
+        bindtap="onCategoryTap"
+      >
+        {{item.name}}
+      </view>
+    </scroll-view>
+
+    <!-- 右侧商品 -->
+    <scroll-view class="products" scroll-y>
+      <view wx:if="{{!products.length}}" class="empty">该分类暂无商品</view>
+      <view
+        wx:for="{{products}}"
+        wx:key="id"
+        class="product"
+      >
+        <image
+          wx:if="{{item.imageUrl}}"
+          class="image"
+          src="{{item.imageUrl}}"
+          mode="aspectFill"
+        />
+        <view wx:else class="image image-empty">🍽</view>
+
+        <view class="info">
+          <view class="name">{{item.name}}</view>
+          <view wx:if="{{item.description}}" class="desc">{{item.description}}</view>
+          <view class="money">¥{{item.price}}</view>
+        </view>
+
+        <view class="actions">
+          <view class="btn-minus" data-product="{{item}}" bindtap="onMinus">−</view>
+          <text class="qty">{{item.quantity || 0}}</text>
+          <view class="btn-plus" data-product="{{item}}" bindtap="onAdd">+</view>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 底部购物车栏 -->
+  <view class="cart-bar" bindtap="openCart" wx:if="{{cartCount > 0}}">
+    <view class="cart-icon">🛒</view>
+    <view class="cart-count">{{cartCount}}</view>
+    <view class="cart-total">¥{{cartTotal}}</view>
+    <view class="go-confirm" catchtap="goConfirm">去结算</view>
+  </view>
+
+  <!-- 购物车弹层 -->
+  <view class="cart-mask" wx:if="{{showCart}}" bindtap="closeCart">
+    <view class="cart-panel" catchtap="">
+      <view class="cart-header">
+        <text>已选 {{cartCount}} 件</text>
+        <text class="close" bindtap="closeCart">✕</text>
+      </view>
+
+      <scroll-view class="cart-list" scroll-y>
+        <view wx:for="{{cart}}" wx:key="productId" class="cart-item">
+          <view class="cart-name">{{item.name}}</view>
+          <view class="money">¥{{item.price}}</view>
+          <view class="cart-actions">
+            <view
+              class="btn-minus"
+              data-product-id="{{item.productId}}"
+              data-delta="-1"
+              bindtap="onCartItemChange"
+            >−</view>
+            <text class="qty">{{item.quantity}}</text>
+            <view
+              class="btn-plus"
+              data-product-id="{{item.productId}}"
+              data-delta="1"
+              bindtap="onCartItemChange"
+            >+</view>
+          </view>
+        </view>
+      </scroll-view>
+
+      <view class="cart-footer">
+        <text>合计 ¥{{cartTotal}}</text>
+        <view class="go-confirm" bindtap="goConfirm">去结算</view>
+      </view>
+    </view>
+  </view>
+</view>

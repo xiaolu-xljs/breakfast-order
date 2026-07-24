@@ -1,0 +1,29 @@
+<view class="page">
+  <view class="section">
+    <view class="section-title">桌号</view>
+    <view class="table-no">{{tableNo}}</view>
+  </view>
+
+  <view class="section">
+    <view class="section-title">已点商品</view>
+    <view wx:for="{{items}}" wx:key="productId" class="item">
+      <text class="name">{{item.name}}</text>
+      <text class="qty">× {{item.quantity}}</text>
+      <text class="money">¥{{item.price * item.quantity}}</text>
+    </view>
+  </view>
+
+  <view class="section total">
+    <text>合计</text>
+    <text class="money total-money">¥{{total}}</text>
+  </view>
+
+  <view class="footer">
+    <button
+      class="btn-submit"
+      bindtap="onSubmit"
+      loading="{{submitting}}"
+      disabled="{{submitting}}"
+    >提交订单</button>
+  </view>
+</view>

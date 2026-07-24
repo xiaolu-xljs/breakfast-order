@@ -1,0 +1,17 @@
+{
+  "pages": [
+    "pages/menu/menu",
+    "pages/order-confirm/order-confirm",
+    "pages/pay/pay",
+    "pages/order-status/order-status"
+  ],
+  "window": {
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#ff6b35",
+    "navigationBarTitleText": "早餐店点餐",
+    "navigationBarTextStyle": "white",
+    "enablePullDownRefresh": false
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}

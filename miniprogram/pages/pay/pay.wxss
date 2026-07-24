@@ -1,0 +1,16 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+}
+.loading {
+  font-size: 18px;
+  font-weight: 600;
+}
+.hint {
+  margin-top: 12px;
+  color: #909399;
+  font-size: 13px;
+}

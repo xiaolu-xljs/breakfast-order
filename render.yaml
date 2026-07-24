@@ -1,0 +1,33 @@
+# Render Blueprint - 一键部署配置
+# 使用方法：
+#   1. 把代码 push 到 GitHub
+#   2. 在 Render Dashboard 点 "New" → "Blueprint"
+#   3. 选你的 GitHub 仓库 → Render 自动识别此文件创建服务
+#   4. 手动添加 DATABASE_URL 环境变量（Neon 控制台拿）
+
+services:
+  - type: web
+    name: breakfast-order-api
+    runtime: node
+    rootDir: server
+    plan: free
+    buildCommand: npm install && npx prisma generate && npx prisma migrate deploy
+    startCommand: npm run seed && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CORS_ORIGIN
+        value: "*"
+      - key: DATABASE_URL
+        sync: false  # 需要在 Neon 创建数据库后手动填入
+      - key: PREVIEW_BASE_URL
+        sync: false  # 部署后填入 Render 提供的 URL
+      - key: WECHAT_PAY_ENABLED
+        value: "false"
+      - key: WX_SUBSCRIBE_ENABLED
+        value: "false"
+    healthCheckPath: /health
